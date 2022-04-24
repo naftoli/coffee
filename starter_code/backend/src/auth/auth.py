@@ -81,7 +81,7 @@ def check_permissions(permission, payload):
         raise AuthError({
             'code': 'unauthorized', 
             'description': 'No permission.'
-        })
+        }, 400)
 
     return True
 
