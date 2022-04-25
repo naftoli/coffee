@@ -3,7 +3,6 @@ from flask import Flask, request, jsonify, abort
 from sqlalchemy import exc
 import json
 from flask_cors import CORS
-import traceback
 
 from .database.models import db_drop_and_create_all, setup_db, Drink
 from .auth.auth import AuthError, requires_auth
@@ -74,18 +73,19 @@ def get_drink_details():
         or appropriate status code indicating reason for failure
 '''
 @app.route('/drinks', methods=['POST'])
-#@requires_auth('post:drinks')
+@requires_auth('post:drinks')
 def create_drink():
     body = request.get_json()
     title = body.get('title')
-    recipe = body.get('recipe')
+    recipe = json.dumps(body.get('recipe'))
     drink = Drink(title=title, recipe=recipe)
 
     try:
         drink.insert()
-    except Exception as e:
-        print(e)
-        #abort(400)
+    #except Exception as e:
+    #    print(e)
+    except:
+        abort(400)
 
     drinks = Drink.query.all()
     return jsonify({
@@ -202,6 +202,6 @@ def not_found(error):
 def auth_error(e):
     return jsonify({
         'success': False, 
-        'error': 401, 
-        'message': e.description
+        'error': e.status_code, 
+        'message': e.error
     }), 401
