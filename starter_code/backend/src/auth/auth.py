@@ -6,7 +6,7 @@ from urllib.request import urlopen
 
 AUTH0_DOMAIN = 'tzivos.us.auth0.com'
 ALGORITHMS = ['RS256']
-API_AUDIENCE = 'dev'
+API_AUDIENCE = 'coffee'
 
 ## AuthError Exception
 '''
@@ -49,7 +49,7 @@ def get_token_auth_header():
         raise AuthError({
             'code': 'invalid_header', 
             'description': 'Missing Token.'
-        })
+        }, 401)
     elif numParts > 2:
         raise AuthError({
             'code': 'invalid_header', 
@@ -75,13 +75,13 @@ def check_permissions(permission, payload):
         raise AuthError({
             'code': 'missing_permissions', 
             'description': 'No permissions found in token.'
-        }, 400)
+        }, 403)
 
     if permission not in payload['permissions']:
         raise AuthError({
             'code': 'unauthorized', 
             'description': 'No permission.'
-        }, 400)
+        }, 403)
 
     return True
 
@@ -125,7 +125,7 @@ def verify_decode_jwt(token):
                 token,
                 rsa_key,
                 algorithms=ALGORITHMS,
-                audience='coffe',
+                audience=API_AUDIENCE,
                 issuer='https://' + AUTH0_DOMAIN + '/'
             )
             return payload
@@ -146,12 +146,12 @@ def verify_decode_jwt(token):
             raise AuthError({
                 'code': 'invalid_header',
                 'description': 'Unable to parse the authentication token.'
-            }, 400)
+            }, 403)
 
     raise AuthError({
         'code': 'invalid_header',
         'description': 'Unable to find the appropriate key.'
-    }, 400)
+    }, 403)
 
 '''
 @TODO implement @requires_auth(permission) decorator method

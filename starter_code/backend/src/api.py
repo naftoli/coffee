@@ -53,7 +53,7 @@ def get_drinks():
 '''
 @app.route('/drinks-detail', methods=['GET'])
 @requires_auth('get:drinks-detail')
-def get_drink_details():
+def get_drink_details(payload):
     drinks = Drink.query.all()
     if not drinks:
         abort(404)
@@ -74,7 +74,7 @@ def get_drink_details():
 '''
 @app.route('/drinks', methods=['POST'])
 @requires_auth('post:drinks')
-def create_drink():
+def create_drink(payload):
     body = request.get_json()
     title = body.get('title')
     recipe = json.dumps(body.get('recipe'))
@@ -106,16 +106,17 @@ def create_drink():
 '''
 @app.route('/drinks/<int:id>', methods=['PATCH'])
 @requires_auth('patch:drinks')
-def update_drink(id):
+def update_drink(payload, id):
     drink = Drink.query.get(id)
     if not drink:
         abort(404)
 
     body = request.get_json()
-    title = body.get('title')
-    recipe = body.get('recipe')
-    drink.title = title
-    drink.recipe = recipe
+    print(body)
+    if not body.get('title') is None:
+        drink.title = body.get('title')
+    if not body.get('recipe') is None:
+        drink.recipe = body.get('recipe')
 
     try:
         drink.update()
@@ -139,7 +140,7 @@ def update_drink(id):
 '''
 @app.route('/drinks/<int:id>', methods=['DELETE'])
 @requires_auth('delete:drinks')
-def delete_drink(id):
+def delete_drink(payload, id):
     drink = Drink.query.get(id)
     if not drink:
         abort(404)
@@ -148,6 +149,10 @@ def delete_drink(id):
         drink.delete()
     except:
         abort(400)
+
+    return jsonify({
+        'success': True
+    }), 200
 
 # Error Handling
 '''
@@ -194,6 +199,22 @@ def not_found(error):
         'message': 'error executing request'
     }), 400
 
+@app.errorhandler(401)
+def not_found(error):
+    return jsonify({
+        'success': False, 
+        'error': 401, 
+        'message': 'invalid authentication'
+    }), 401
+
+@app.errorhandler(403)
+def not_found(error):
+    return jsonify({
+        'success': False, 
+        'error': 403, 
+        'message': 'invalid permissions'
+    }), 403
+
 '''
 @TODO implement error handler for AuthError
     error handler should conform to general task above
@@ -204,4 +225,4 @@ def auth_error(e):
         'success': False, 
         'error': e.status_code, 
         'message': e.error
-    }), 401
+    }), e.status_code
